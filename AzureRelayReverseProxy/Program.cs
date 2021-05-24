@@ -14,7 +14,7 @@ namespace AzureRelayReverseProxy
             {
                 Console.WriteLine("Requires two arguments: connection string and target uri.");
                 Console.WriteLine("Example:");
-                Console.WriteLine($"\tdotnet.exe {Assembly.GetEntryAssembly().ManifestModule.Name} Endpoint=sb://contoso.servicebus.windows.net/;SharedAccessKeyName=ListenKey;SharedAccessKey=XXXX,EntityPath=your_hc_name http://host:80/api/");
+                Console.WriteLine($"\tdotnet.exe {Assembly.GetEntryAssembly().ManifestModule.Name} Endpoint=sb://contoso.servicebus.windows.net/;SharedAccessKeyName=ListenKey;SharedAccessKey=XXXX;EntityPath=your_hc_name http://host:80/api/");
                 return;
             }
 
