@@ -1,35 +1,60 @@
 ﻿using System;
-using System.Reflection;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace AzureRelayReverseProxy
 {
     class Program
     {
+        static readonly List<Proxy> proxies = new();
+
         static void Main(string[] args)
         {
+            using IHost host = CreateHostBuilder(args).Build();
+
             Console.WriteLine("Azure Relay Reverse Proxy");
-            if (args == null || args.Length != 2)
+            Console.WriteLine($"{proxies.Count} proxy configurations loaded");
+
+            if (proxies.Count > 0)
             {
-                Console.WriteLine("Requires two arguments: connection string and target uri.");
-                Console.WriteLine("Example:");
-                Console.WriteLine($"\tdotnet.exe {Assembly.GetEntryAssembly().ManifestModule.Name} Endpoint=sb://contoso.servicebus.windows.net/;SharedAccessKeyName=ListenKey;SharedAccessKey=XXXX;EntityPath=your_hc_name http://host:80/api/");
-                return;
+                List<Task> proxyTasks = new();
+
+                foreach (var proxy in proxies)
+                {
+                    Uri targetUri = new(proxy.TargetUri.EnsureEndsWith("/"));
+                    proxyTasks.Add(StartProxy(proxy.ConnectionString, targetUri));
+                }
+
+                Task.WhenAll(proxyTasks).GetAwaiter().GetResult();
             }
 
-            string connectionString = args[0];
-            Uri targetUri = new Uri(args[1].EnsureEndsWith("/"));
-            RunAsync(connectionString, targetUri).GetAwaiter().GetResult();
+            Console.WriteLine("Shutting down client");
         }
 
-        static async Task RunAsync(string connectionString, Uri targetUri)
+        static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((hostingContext, configuration) =>
+                {
+                    configuration.Sources.Clear();
+
+                    IHostEnvironment env = hostingContext.HostingEnvironment;
+
+                    configuration
+                        .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                        .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true);
+
+                    IConfigurationRoot configurationRoot = configuration.Build();
+                    configurationRoot.GetSection("Proxies").Bind(proxies);
+                });
+
+        static async Task StartProxy(string connectionString, Uri targetUri)
         {
-            var hybridProxy = new HybridConnectionReverseProxy(connectionString, targetUri);
+            HybridConnectionReverseProxy hybridProxy = new(connectionString, targetUri);
             await hybridProxy.OpenAsync(CancellationToken.None);
-
             Console.ReadLine();
-
             await hybridProxy.CloseAsync(CancellationToken.None);
         }
     }

@@ -19,24 +19,24 @@ namespace AzureRelayReverseProxy
 
         public HybridConnectionReverseProxy(string connectionString, Uri targetUri)
         {
-            this.listener = new HybridConnectionListener(connectionString);
-            this.httpClient = new HttpClient();
-            this.httpClient.BaseAddress = targetUri;
-            this.httpClient.DefaultRequestHeaders.ExpectContinue = false;
-            this.hybridConnectionSubpath = this.listener.Address.AbsolutePath.EnsureEndsWith("/");
+            listener = new HybridConnectionListener(connectionString);
+            httpClient = new HttpClient();
+            httpClient.BaseAddress = targetUri;
+            httpClient.DefaultRequestHeaders.ExpectContinue = false;
+            hybridConnectionSubpath = listener.Address.AbsolutePath.EnsureEndsWith("/");
         }
 
         public async Task OpenAsync(CancellationToken cancelToken)
         {
-            this.listener.RequestHandler = (context) => this.RequestHandler(context);
-            await this.listener.OpenAsync(cancelToken);
-            Console.WriteLine($"Forwarding from {this.listener.Address} to {this.httpClient.BaseAddress}.");
-            Console.WriteLine("utcTime, request, statusCode, durationMs");
+            listener.RequestHandler = (context) => this.RequestHandler(context);
+            await listener.OpenAsync(cancelToken);
+            Console.WriteLine($"Forwarding from {listener.Address} to {httpClient.BaseAddress}.");
+            Console.WriteLine("UtcTime, Request, StatusCode, DurationMs");
         }
 
         public Task CloseAsync(CancellationToken cancelToken)
         {
-            return this.listener.CloseAsync(cancelToken);
+            return listener.CloseAsync(cancelToken);
         }
 
         async void RequestHandler(RelayedHttpListenerContext context)
@@ -45,7 +45,7 @@ namespace AzureRelayReverseProxy
             try
             {
                 HttpRequestMessage requestMessage = CreateHttpRequestMessage(context);
-                HttpResponseMessage responseMessage = await this.httpClient.SendAsync(requestMessage);
+                HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage);
                 await SendResponseAsync(context, responseMessage);
                 await context.Response.CloseAsync();
             }
@@ -120,7 +120,7 @@ namespace AzureRelayReverseProxy
         void LogRequest(DateTime startTimeUtc, RelayedHttpListenerContext context)
         {
             DateTime stopTimeUtc = DateTime.UtcNow;
-            StringBuilder buffer = new StringBuilder();
+            StringBuilder buffer = new();
             buffer.Append($"{startTimeUtc.ToString("s", CultureInfo.InvariantCulture)}, ");
             buffer.Append($"\"{context.Request.HttpMethod} {context.Request.Url.GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped)}\", ");
             buffer.Append($"{(int)context.Response.StatusCode}, ");
