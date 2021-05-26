@@ -32,7 +32,6 @@ USER dotnet
 WORKDIR /home/dotnet
 
 COPY --from=development /home/dotnet/out/ ./
-COPY --from=development /home/dotnet/AzureRelayReverseProxy/appsettings*.json ./
 ENV ASPNETCORE_ENVIRONMENT=production
 # Override entrypoint using shell form so that environment variables are picked up
 ENTRYPOINT dotnet AzureRelayReverseProxy.dll
