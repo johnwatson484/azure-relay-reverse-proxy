@@ -1,7 +1,0 @@
-version: '3.7'
-services:
-  azure-relay-reverse-proxy:
-    build:
-      context: .
-      target: production
-    image: azure-relay-reverse-proxy
