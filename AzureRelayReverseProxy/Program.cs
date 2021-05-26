@@ -40,12 +40,12 @@ namespace AzureRelayReverseProxy
                 {
                     configuration.Sources.Clear();
 
-                    string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+                    string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "production";
 
                     configuration
                         .AddEnvironmentVariables()
                         .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                        .AddJsonFile($"appsettings.{environment}.json", false, true);
+                        .AddJsonFile($"appsettings.{environment}.json", true, true);
 
                     IConfigurationRoot configurationRoot = configuration.Build();
                     configurationRoot.GetSection("Proxies").Bind(proxies);

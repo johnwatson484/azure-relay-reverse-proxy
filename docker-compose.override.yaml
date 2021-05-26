@@ -1,0 +1,7 @@
+version: '3.7'
+services:
+  azure-relay-reverse-proxy:
+    build:
+      target: development
+    volumes:
+      - ./AzureRelayReverseProxy:/home/dotnet/AzureRelayReverseProxy
