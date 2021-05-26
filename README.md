@@ -1,2 +1,1 @@
-# azure-relay-reverse-proxy
-Azure Relay Reverse Proxy
+# Azure Relay Reverse Proxy
