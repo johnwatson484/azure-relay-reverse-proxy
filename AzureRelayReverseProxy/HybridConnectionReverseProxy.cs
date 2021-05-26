@@ -20,8 +20,10 @@ namespace AzureRelayReverseProxy
         public HybridConnectionReverseProxy(string connectionString, Uri targetUri)
         {
             listener = new HybridConnectionListener(connectionString);
-            httpClient = new HttpClient();
-            httpClient.BaseAddress = targetUri;
+            httpClient = new HttpClient
+            {
+                BaseAddress = targetUri
+            };
             httpClient.DefaultRequestHeaders.ExpectContinue = false;
             hybridConnectionSubpath = listener.Address.AbsolutePath.EnsureEndsWith("/");
         }
@@ -31,7 +33,6 @@ namespace AzureRelayReverseProxy
             listener.RequestHandler = (context) => this.RequestHandler(context);
             await listener.OpenAsync(cancelToken);
             Console.WriteLine($"Forwarding from {listener.Address} to {httpClient.BaseAddress}.");
-            Console.WriteLine("UtcTime, Request, StatusCode, DurationMs");
         }
 
         public Task CloseAsync(CancellationToken cancelToken)
@@ -60,7 +61,7 @@ namespace AzureRelayReverseProxy
             }
         }
 
-        async Task SendResponseAsync(RelayedHttpListenerContext context, HttpResponseMessage responseMessage)
+        static async Task SendResponseAsync(RelayedHttpListenerContext context, HttpResponseMessage responseMessage)
         {
             context.Response.StatusCode = responseMessage.StatusCode;
             context.Response.StatusDescription = responseMessage.ReasonPhrase;
@@ -78,9 +79,10 @@ namespace AzureRelayReverseProxy
             await responseStream.CopyToAsync(context.Response.OutputStream);
         }
 
-        void SendErrorResponse(Exception e, RelayedHttpListenerContext context)
+        static void SendErrorResponse(Exception e, RelayedHttpListenerContext context)
         {
             context.Response.StatusCode = HttpStatusCode.InternalServerError;
+            context.Response.StatusDescription = e.Message;
             context.Response.Close();
         }
 
@@ -117,7 +119,7 @@ namespace AzureRelayReverseProxy
             return requestMessage;
         }
 
-        void LogRequest(DateTime startTimeUtc, RelayedHttpListenerContext context)
+        static void LogRequest(DateTime startTimeUtc, RelayedHttpListenerContext context)
         {
             DateTime stopTimeUtc = DateTime.UtcNow;
             StringBuilder buffer = new();

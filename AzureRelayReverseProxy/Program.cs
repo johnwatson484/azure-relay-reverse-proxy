@@ -22,7 +22,7 @@ namespace AzureRelayReverseProxy
             {
                 List<Task> proxyTasks = new();
 
-                foreach (var proxy in proxies)
+                foreach (Proxy proxy in proxies)
                 {
                     Uri targetUri = new(proxy.TargetUri.EnsureEndsWith("/"));
                     proxyTasks.Add(StartProxy(proxy.ConnectionString, targetUri));
@@ -40,11 +40,12 @@ namespace AzureRelayReverseProxy
                 {
                     configuration.Sources.Clear();
 
-                    IHostEnvironment env = hostingContext.HostingEnvironment;
+                    string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
 
                     configuration
+                        .AddEnvironmentVariables()
                         .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                        .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true);
+                        .AddJsonFile($"appsettings.{environment}.json", false, true);
 
                     IConfigurationRoot configurationRoot = configuration.Build();
                     configurationRoot.GetSection("Proxies").Bind(proxies);
