@@ -30,7 +30,7 @@ namespace AzureRelayReverseProxy
 
         public async Task OpenAsync(CancellationToken cancelToken)
         {
-            listener.RequestHandler = (context) => this.RequestHandler(context);
+            listener.RequestHandler = async (context) => await RequestHandler(context);
             await listener.OpenAsync(cancelToken);
             Console.WriteLine($"Forwarding from {listener.Address} to {httpClient.BaseAddress}.");
         }
@@ -40,7 +40,7 @@ namespace AzureRelayReverseProxy
             return listener.CloseAsync(cancelToken);
         }
 
-        async void RequestHandler(RelayedHttpListenerContext context)
+        async Task RequestHandler(RelayedHttpListenerContext context)
         {
             DateTime startTimeUtc = DateTime.UtcNow;
             try

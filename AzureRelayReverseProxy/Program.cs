@@ -7,7 +7,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace AzureRelayReverseProxy
 {
-    class Program
+    static class Program
     {
         static readonly List<Proxy> proxies = new();
 
